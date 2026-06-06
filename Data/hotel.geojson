@@ -1,0 +1,23 @@
+{
+"type": "FeatureCollection",
+"name": "hotel",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "fid": 1, "ogc_fid": 1, "no": 1.0, "nama_lokas": "WISMA SARGEDE", "alamat": "Jl. Pramuka No. 5F", "longitude": 110.3885272, "latitude": -7.8196011 }, "geometry": { "type": "Point", "coordinates": [ 110.3885272, -7.8196011 ] } },
+{ "type": "Feature", "properties": { "fid": 2, "ogc_fid": 138, "no": 138.0, "nama_lokas": "HOTEL CANIGA", "alamat": "CANIGA Jl. Kyai Guno Mrico No.9", "longitude": 110.3940116, "latitude": -7.8349441 }, "geometry": { "type": "Point", "coordinates": [ 110.3940116, -7.8349441 ] } },
+{ "type": "Feature", "properties": { "fid": 3, "ogc_fid": 190, "no": 190.0, "nama_lokas": "BHUMI HOSTEL", "alamat": "Jalan Raden Ronggo I No.14", "longitude": 110.3935004, "latitude": -7.8232738 }, "geometry": { "type": "Point", "coordinates": [ 110.3935004, -7.8232738 ] } },
+{ "type": "Feature", "properties": { "fid": 4, "ogc_fid": 224, "no": 224.0, "nama_lokas": "WISMA SARGEDE", "alamat": "Jl. Pramuka No. 5F", "longitude": 110.3885272, "latitude": -7.8196011 }, "geometry": { "type": "Point", "coordinates": [ 110.3885272, -7.8196011 ] } },
+{ "type": "Feature", "properties": { "fid": 5, "ogc_fid": 314, "no": 314.0, "nama_lokas": "HOTEL DEWARUCI II", "alamat": "\n  Jalan Imogiri Timur No.158 RT.43 RW.11", "longitude": 110.3871908, "latitude": -7.8285606 }, "geometry": { "type": "Point", "coordinates": [ 110.3871908, -7.8285606 ] } },
+{ "type": "Feature", "properties": { "fid": 6, "ogc_fid": 366, "no": 366.0, "nama_lokas": "HOTEL KAYU MANIS", "alamat": "JL GAMBIRAN NO. 52", "longitude": 110.387817, "latitude": -7.8197889 }, "geometry": { "type": "Point", "coordinates": [ 110.387817, -7.8197889 ] } },
+{ "type": "Feature", "properties": { "fid": 7, "ogc_fid": 442, "no": 442.0, "nama_lokas": "AFIFAH NADA", "alamat": "COZYSTOP\n Jl. Tinalan No. 482C", "longitude": 110.3949284, "latitude": -7.8216138 }, "geometry": { "type": "Point", "coordinates": [ 110.3949284, -7.8216138 ] } },
+{ "type": "Feature", "properties": { "fid": 8, "ogc_fid": 520, "no": 520.0, "nama_lokas": "RIZKI LAZUARDI ZEIN", "alamat": "Jalan Mendung Warih No 5", "longitude": 110.3871079, "latitude": -7.8297378 }, "geometry": { "type": "Point", "coordinates": [ 110.3871079, -7.8297378 ] } },
+{ "type": "Feature", "properties": { "fid": 9, "ogc_fid": 545, "no": 545.0, "nama_lokas": "ARIAWAN DWI NUGROHO", "alamat": "PUTRA PANDAWA HOMESTAY \n \n Tinalan KG II/ 476 RT18 RW04 Gang gotong royong", "longitude": 110.3947533, "latitude": -7.8213558 }, "geometry": { "type": "Point", "coordinates": [ 110.3947533, -7.8213558 ] } },
+{ "type": "Feature", "properties": { "fid": 10, "ogc_fid": 549, "no": 549.0, "nama_lokas": "CAKRA ALAM SEJAHTERA ABADI", "alamat": "Gambiran UH 5/82", "longitude": 110.3895666, "latitude": -7.8220722 }, "geometry": { "type": "Point", "coordinates": [ 110.3895666, -7.8220722 ] } },
+{ "type": "Feature", "properties": { "fid": 11, "ogc_fid": 588, "no": 588.0, "nama_lokas": "SABRINA ZAHARA NOOR RAHMA", "alamat": "Nyi Adi Soro I No. 9", "longitude": 110.3954231, "latitude": -7.818702 }, "geometry": { "type": "Point", "coordinates": [ 110.3954231, -7.818702 ] } },
+{ "type": "Feature", "properties": { "fid": 12, "ogc_fid": 596, "no": 596.0, "nama_lokas": "ANDY AGUS WIDODO", "alamat": "Jalan Gambir Sawit", "longitude": 110.3895402, "latitude": -7.8232314 }, "geometry": { "type": "Point", "coordinates": [ 110.3895402, -7.8232314 ] } },
+{ "type": "Feature", "properties": { "fid": 13, "ogc_fid": 732, "no": 732.0, "nama_lokas": "HOTEL BINTANG FAJAR", "alamat": "JL. P. KEMERDEKAAN NO. 87 YOGYAKARTA", "longitude": 110.3913992, "latitude": -7.8186665 }, "geometry": { "type": "Point", "coordinates": [ 110.3913992, -7.8186665 ] } },
+{ "type": "Feature", "properties": { "fid": 14, "ogc_fid": 768, "no": 768.0, "nama_lokas": "AZIZI HOUSE", "alamat": "JL. RETNO DUMILAH NO. 64 A YOGYAKARTA", "longitude": 110.3950864, "latitude": -7.8183853 }, "geometry": { "type": "Point", "coordinates": [ 110.3950864, -7.8183853 ] } },
+{ "type": "Feature", "properties": { "fid": 15, "ogc_fid": 804, "no": 804.0, "nama_lokas": "HOTEL SANTOSO", "alamat": "JL. IMOGIRI NO.175 YK.", "longitude": 110.3877642, "latitude": -7.8329451 }, "geometry": { "type": "Point", "coordinates": [ 110.3877642, -7.8329451 ] } },
+{ "type": "Feature", "properties": { "fid": 16, "ogc_fid": 1049, "no": 1049.0, "nama_lokas": "KOTAGEDHE HERITAGE", "alamat": "JL. TEGAL GENDU NO. 20 YOGYAKARTA", "longitude": 110.3894271, "latitude": -7.8263841 }, "geometry": { "type": "Point", "coordinates": [ 110.3894271, -7.8263841 ] } }
+]
+}

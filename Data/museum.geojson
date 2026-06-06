@@ -1,0 +1,8 @@
+{
+"type": "FeatureCollection",
+"name": "museum",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "nama": "Museum Kotagede", "kategori": "Museum", "deskripsi": "Museum ini menjadi situs cagar budaya yang mencakup tentang sejarah Kotagede secara keseluruhan.", "alamat": "Jl. Tegal Gendu No.20, Prenggan, Kec. Kotagede, Kota Yogyakarta, Daerah Istimewa Yogyakarta 55172", "jam_buka": "Selasa-Minggu 08.00-15.30" }, "geometry": { "type": "Point", "coordinates": [ 110.392153959475479, -7.826348789791187 ] } }
+]
+}
