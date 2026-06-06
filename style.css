@@ -18,9 +18,9 @@ body{
 
     color:#654c0b;
 
-    padding:30px 20px;
-
     text-align:center;
+
+    padding:30px 20px;
 
     border-bottom:3px solid #654c0b;
 
@@ -30,13 +30,11 @@ body{
 
     margin:0;
 
-    font-size:60px;
+    font-size:64px;
 
     font-weight:900;
 
     color:#654c0b;
-
-    letter-spacing:2px;
 
 }
 
@@ -44,7 +42,7 @@ body{
 
     margin-top:15px;
 
-    font-size:28px;
+    font-size:26px;
 
     font-weight:bold;
 
@@ -72,17 +70,17 @@ body{
 
     position:absolute;
 
-    top:135px;
+    top:230px;
 
     left:10px;
 
     z-index:1000;
 
-    background:#654c0b;
+    background:#feebab;
 
-    color:#feebab;
+    color:#654c0b;
 
-    border:2px solid #feebab;
+    border:2px solid #654c0b;
 
     border-radius:12px;
 
@@ -96,13 +94,13 @@ body{
 
     font-family:"Times New Roman", serif;
 
-    box-shadow:0 3px 8px #654c0b;
+    box-shadow:0 3px 8px #feebab;
 
 }
 
 #homeBtn:hover{
 
-    background:#f6df93;
+    background:#654c0b;
 
 }
 
@@ -112,7 +110,7 @@ body{
 
 .leaflet-top.leaflet-left{
 
-    margin-top:30px;
+    margin-top:90px;
 
 }
 
