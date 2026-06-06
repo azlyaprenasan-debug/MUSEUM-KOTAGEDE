@@ -5,7 +5,7 @@
 body{
     margin:0;
     font-family:"Times New Roman", serif;
-    background:#ffffff;
+    background:#654c0b;
 }
 
 /* =====================================
@@ -94,13 +94,43 @@ body{
 
     font-family:"Times New Roman", serif;
 
-    box-shadow:0 3px 8px #feebab;
+    box-shadow:0 3px 8px rgba(101,76,11,0.4);
+
+    transition:0.3s;
 
 }
+
+/* Saat mouse diarahkan */
 
 #homeBtn:hover{
 
     background:#654c0b;
+
+    color:#feebab;
+
+}
+
+/* Saat tombol ditekan */
+
+#homeBtn:active{
+
+    background:#654c0b;
+
+    color:#feebab;
+
+    transform:scale(0.97);
+
+}
+
+/* Saat tombol mendapat fokus */
+
+#homeBtn:focus{
+
+    background:#654c0b;
+
+    color:#feebab;
+
+    outline:none;
 
 }
 
@@ -118,13 +148,15 @@ body{
 
     border:2px solid #654c0b !important;
 
-    border-radius:10px !important;
+    border-radius:12px !important;
 
     overflow:hidden;
 
-    box-shadow:0 3px 8px rgba(0,0,0,0.25);
+    box-shadow:0 3px 8px rgba(101,76,11,0.4) !important;
 
 }
+
+/* Tombol + dan - */
 
 .leaflet-control-zoom a{
 
@@ -136,13 +168,72 @@ body{
 
     font-size:24px !important;
 
-    font-weight:bold;
+    font-weight:900 !important;
+
+    font-family:"Times New Roman", serif !important;
+
+    width:40px !important;
+
+    height:40px !important;
+
+    line-height:40px !important;
+
+    transition:0.3s;
 
 }
 
+/* Hover */
+
 .leaflet-control-zoom a:hover{
 
-    background:#f6df93 !important;
+    background:#654c0b !important;
+
+    color:#feebab !important;
+
+}
+
+/* Saat diklik */
+
+.leaflet-control-zoom a:active{
+
+    background:#654c0b !important;
+
+    color:#feebab !important;
+
+    transform:scale(0.95);
+
+}
+
+/* Fokus */
+
+.leaflet-control-zoom a:focus{
+
+    background:#654c0b !important;
+
+    color:#feebab !important;
+
+    outline:none !important;
+
+}
+/* Tooltip Zoom In & Zoom Out */
+
+.leaflet-tooltip{
+
+    background:#feebab !important;
+
+    color:#654c0b !important;
+
+    border:2px solid #654c0b !important;
+
+    border-radius:8px;
+
+    font-family:"Times New Roman", serif;
+
+    font-size:18px;
+
+    font-weight:bold;
+
+    box-shadow:0 3px 8px rgba(101,76,11,0.4);
 
 }
 

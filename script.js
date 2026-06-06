@@ -7,7 +7,7 @@ var museumLng = 110.392154;
 
 var map = L.map('map').setView(
     [museumLat,museumLng],
-    18
+    28
 );
 
 // =====================================
@@ -36,12 +36,12 @@ imperial:false
 
 var museumIcon = L.icon({
 iconUrl:'img/museum.png',
-iconSize:[50,50]
+iconSize:[60,60]
 });
 
 var hotelIcon = L.icon({
 iconUrl:'img/hotel.png',
-iconSize:[30,30]
+iconSize:[40,40]
 });
 
 var restoranIcon = L.icon({
