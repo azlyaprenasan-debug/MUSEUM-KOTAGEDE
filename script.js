@@ -1,72 +1,127 @@
 // =====================================
-// MEMBUAT PETA
+// PETA
 // =====================================
 
+var museumLat = -7.826349;
+var museumLng = 110.392154;
+
 var map = L.map('map').setView(
-    [-7.8285, 110.4017],
-    15
+    [museumLat,museumLng],
+    18
 );
 
-// Basemap OpenStreetMap
+// =====================================
+// BASEMAP
+// =====================================
+
 L.tileLayer(
-    'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-    {
-        attribution: '&copy; OpenStreetMap'
-    }
+'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+{
+attribution:'© OpenStreetMap'
+}
 ).addTo(map);
+
+// =====================================
+// SCALE BAR
+// =====================================
+
+L.control.scale({
+metric:true,
+imperial:false
+}).addTo(map);
 
 // =====================================
 // ICON
 // =====================================
 
 var museumIcon = L.icon({
-    iconUrl: 'img/museum.png',
-    iconSize: [45, 45]
+iconUrl:'img/museum.png',
+iconSize:[50,50]
 });
 
 var hotelIcon = L.icon({
-    iconUrl: 'img/hotel.png',
-    iconSize: [25, 25]
+iconUrl:'img/hotel.png',
+iconSize:[30,30]
 });
 
 var restoranIcon = L.icon({
-    iconUrl: 'img/restoran.png',
-    iconSize: [15, 15]
+iconUrl:'img/restoran.png',
+iconSize:[30,30]
 });
 
 var ibadahIcon = L.icon({
-    iconUrl: 'img/tempatibadah.png',
-    iconSize: [15, 15]
+iconUrl:'img/tempatibadah.png',
+iconSize:[30,30]
 });
 
 var kesehatanIcon = L.icon({
-    iconUrl: 'img/fasilitaskesehatan.png',
-    iconSize: [15, 15]
+iconUrl:'img/fasilitaskesehatan.png',
+iconSize:[30,30]
 });
+
+// =====================================
+// VARIABEL LAYER
+// =====================================
+
+var museumLayer;
+var hotelLayer;
+var restoranLayer;
+var ibadahLayer;
+var kesehatanLayer;
 
 // =====================================
 // MUSEUM
 // =====================================
 
 fetch("Data/museum.geojson")
-.then(response => response.json())
-.then(data => {
+.then(res=>res.json())
+.then(data=>{
 
-    L.geoJSON(data, {
+museumLayer = L.geoJSON(data,{
 
-        pointToLayer: function(feature, latlng){
-            return L.marker(latlng, {
-                icon: museumIcon
-            });
-        },
+pointToLayer:function(feature,latlng){
 
-        onEachFeature: function(feature, layer){
-            layer.bindPopup(
-                "<b>Museum Kotagede</b>"
-            );
-        }
+return L.marker(latlng,{
+icon:museumIcon
+});
 
-    }).addTo(map);
+},
+
+onEachFeature:function(feature,layer){
+
+layer.bindPopup(
+
+"<div style='width:250px'>" +
+
+"<h3>"+feature.properties.nama+"</h3>"+
+
+"<b>Kategori :</b> "+
+feature.properties.kategori+
+
+"<br><br>"+
+
+"<b>Deskripsi :</b><br>"+
+feature.properties.deskripsi+
+
+"<br><br>"+
+
+"<b>Alamat :</b><br>"+
+feature.properties.alamat+
+
+"<br><br>"+
+
+"<b>Jam Buka :</b><br>"+
+feature.properties.jam_buka+
+
+"</div>"
+
+);
+
+}
+
+});
+
+museumLayer.addTo(map);
 
 });
 
@@ -75,24 +130,36 @@ fetch("Data/museum.geojson")
 // =====================================
 
 fetch("Data/hotel.geojson")
-.then(response => response.json())
-.then(data => {
+.then(res=>res.json())
+.then(data=>{
 
-    L.geoJSON(data, {
+hotelLayer = L.geoJSON(data,{
 
-        pointToLayer: function(feature, latlng){
-            return L.marker(latlng, {
-                icon: hotelIcon
-            });
-        },
+pointToLayer:function(feature,latlng){
 
-        onEachFeature: function(feature, layer){
-            layer.bindPopup(
-                "<b>Hotel</b>"
-            );
-        }
+return L.marker(latlng,{
+icon:hotelIcon
+});
 
-    }).addTo(map);
+},
+
+onEachFeature:function(feature,layer){
+
+layer.bindPopup(
+
+"<h3>"+feature.properties.nama_lokas+"</h3>"+
+
+"<b>Alamat :</b><br>"+
+
+feature.properties.alamat
+
+);
+
+}
+
+});
+
+hotelLayer.addTo(map);
 
 });
 
@@ -101,24 +168,36 @@ fetch("Data/hotel.geojson")
 // =====================================
 
 fetch("Data/restoran.geojson")
-.then(response => response.json())
-.then(data => {
+.then(res=>res.json())
+.then(data=>{
 
-    L.geoJSON(data, {
+restoranLayer = L.geoJSON(data,{
 
-        pointToLayer: function(feature, latlng){
-            return L.marker(latlng, {
-                icon: restoranIcon
-            });
-        },
+pointToLayer:function(feature,latlng){
 
-        onEachFeature: function(feature, layer){
-            layer.bindPopup(
-                "<b>Restoran</b>"
-            );
-        }
+return L.marker(latlng,{
+icon:restoranIcon
+});
 
-    }).addTo(map);
+},
+
+onEachFeature:function(feature,layer){
+
+layer.bindPopup(
+
+"<h3>"+feature.properties.nama_resto+"</h3>"+
+
+"<b>Alamat :</b><br>"+
+
+feature.properties.alamat
+
+);
+
+}
+
+});
+
+restoranLayer.addTo(map);
 
 });
 
@@ -127,24 +206,36 @@ fetch("Data/restoran.geojson")
 // =====================================
 
 fetch("Data/tempat_ibadah.geojson")
-.then(response => response.json())
-.then(data => {
+.then(res=>res.json())
+.then(data=>{
 
-    L.geoJSON(data, {
+ibadahLayer = L.geoJSON(data,{
 
-        pointToLayer: function(feature, latlng){
-            return L.marker(latlng, {
-                icon: ibadahIcon
-            });
-        },
+pointToLayer:function(feature,latlng){
 
-        onEachFeature: function(feature, layer){
-            layer.bindPopup(
-                "<b>Tempat Ibadah</b>"
-            );
-        }
+return L.marker(latlng,{
+icon:ibadahIcon
+});
 
-    }).addTo(map);
+},
+
+onEachFeature:function(feature,layer){
+
+layer.bindPopup(
+
+"<h3>"+feature.properties.nama_tempa+"</h3>"+
+
+"<b>Alamat :</b><br>"+
+
+feature.properties.alamat
+
+);
+
+}
+
+});
+
+ibadahLayer.addTo(map);
 
 });
 
@@ -153,23 +244,115 @@ fetch("Data/tempat_ibadah.geojson")
 // =====================================
 
 fetch("Data/fasilitas_kesehatan.geojson")
-.then(response => response.json())
-.then(data => {
+.then(res=>res.json())
+.then(data=>{
 
-    L.geoJSON(data, {
+kesehatanLayer = L.geoJSON(data,{
 
-        pointToLayer: function(feature, latlng){
-            return L.marker(latlng, {
-                icon: kesehatanIcon
-            });
-        },
+pointToLayer:function(feature,latlng){
 
-        onEachFeature: function(feature, layer){
-            layer.bindPopup(
-                "<b>Fasilitas Kesehatan</b>"
-            );
-        }
+return L.marker(latlng,{
+icon:kesehatanIcon
+});
 
-    }).addTo(map);
+},
+
+onEachFeature:function(feature,layer){
+
+layer.bindPopup(
+
+"<h3>"+feature.properties.nama_faske+"</h3>"+
+
+"<b>Alamat :</b><br>"+
+
+feature.properties.alamat
+
+);
+
+}
+
+});
+
+kesehatanLayer.addTo(map);
+
+});
+
+// =====================================
+// LEGENDA
+// =====================================
+
+var legend = L.control({
+position:'bottomright'
+});
+
+legend.onAdd = function(){
+
+var div = L.DomUtil.create(
+'div',
+'legend'
+);
+
+div.innerHTML =
+
+'<h4>Legenda</h4>'+
+
+'<p><img src="img/museum.png" width="18"> Museum</p>'+
+
+'<p><img src="img/hotel.png" width="18"> Hotel</p>'+
+
+'<p><img src="img/restoran.png" width="18"> Restoran</p>'+
+
+'<p><img src="img/tempatibadah.png" width="18"> Tempat Ibadah</p>'+
+
+'<p><img src="img/fasilitaskesehatan.png" width="18"> Fasilitas Kesehatan</p>';
+
+return div;
+
+};
+
+legend.addTo(map);
+
+// =====================================
+// LAYER CONTROL
+// =====================================
+
+setTimeout(function(){
+
+var overlayMaps = {
+
+"Museum":museumLayer,
+
+"Hotel":hotelLayer,
+
+"Restoran":restoranLayer,
+
+"Tempat Ibadah":ibadahLayer,
+
+"Fasilitas Kesehatan":kesehatanLayer
+
+};
+
+L.control.layers(
+null,
+overlayMaps,
+{
+collapsed:false
+}
+).addTo(map);
+
+},1000);
+
+// =====================================
+// HOME BUTTON
+// =====================================
+
+document
+.getElementById("homeBtn")
+.addEventListener("click",function(){
+
+map.setView(
+[museumLat,museumLng],
+16
+);
 
 });
