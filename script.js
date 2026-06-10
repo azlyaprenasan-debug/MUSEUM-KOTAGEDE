@@ -356,3 +356,11 @@ map.setView(
 );
 
 });
+document.getElementById("tourBtn").onclick = function(){
+
+    window.open(
+        "virtualtour/index.html",
+        "_blank"
+    );
+
+};

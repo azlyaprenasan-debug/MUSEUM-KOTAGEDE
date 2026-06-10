@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WebGIS Living Museum Kotagede</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Infant:ital,wght@0,400;0,600;1,400;1,700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    :root {
+      --cream:   #F0EFCD;
+      --teal:    #105361;
+      --salmon:  #D5958B;
+      --green:   #859556;
+      --shadow:  #0E3323;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Poppins', sans-serif; background: var(--cream); color: var(--green); min-height: 100vh; }
+
+    /* ══ NAVBAR ══ */
+    .navbar-wrap {
+      padding: 12px 48px 8px;
+      position: sticky; top: 0; z-index: 200;
+    }
+    nav {
+      background: var(--cream);
+      border-radius: 10px;
+      box-shadow: 0px 0px 10px 2px var(--shadow);
+      display: flex;
+      align-items: center;
+      gap: clamp(6px, 2vw, 24px);
+      padding: 8px clamp(10px, 2vw, 20px);
+      position: relative;
+    }
+    .nav-item { position: relative; }
+    .nav-link {
+      display: flex; align-items: center; gap: 4px;
+      padding: 5px clamp(8px, 1.5vw, 16px);
+      border-radius: 20px;
+      font-family: 'Poppins', sans-serif;
+      font-size: clamp(12px, 1.2vw, 17px);
+      color: var(--green);
+      font-weight: 400;
+      cursor: pointer; user-select: none;
+      background: transparent; border: none;
+      transition: background 0.15s, color 0.15s;
+      white-space: nowrap; text-decoration: none;
+    }
+    .nav-link:hover { background: var(--salmon); color: var(--cream); }
+    .nav-link.active { background: var(--salmon); color: var(--cream); font-weight: 400; }
+    .nav-link .arrow { font-size: 9px; transition: transform 0.2s; }
+    .nav-item.open .nav-link .arrow { transform: rotate(180deg); }
+
+    .dropdown-menu {
+      display: none; position: absolute;
+      top: calc(100% + 4px); left: 0;
+      background: var(--cream);
+      border-radius: 10px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.13);
+      min-width: 130px; overflow: hidden; z-index: 300;
+    }
+    .nav-item.open .dropdown-menu { display: block; }
+    .dropdown-item {
+      display: block; padding: 9px 16px;
+      font-size: clamp(11px, 1.1vw, 15px);
+      color: var(--green); cursor: pointer;
+      font-weight: 400;
+      border: none; background: transparent;
+      width: 100%; text-align: left;
+      transition: background 0.13s, color 0.13s;
+      letter-spacing: 0.03em;
+    }
+    .dropdown-divider { height: 1px; background: var(--teal); margin: 0 8px; }
+    .dropdown-item:hover { background: var(--salmon); color: var(--cream); }
+    .dropdown-item.active { background: var(--salmon); color: var(--cream); }
+
+    /* ══ PAGES ══ */
+    .page { display: none; flex-direction: column; min-height: calc(100vh - 60px); }
+    .page.active { display: flex; animation: fadeIn 0.25s ease; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+    /* ══ HERO ══ */
+    .hero {
+      margin: 0 15px;
+      border-radius: 20px;
+      overflow: visible;        /* penting agar tombol bisa keluar */
+      position: relative;
+      height: clamp(200px, 30vw, 443px);
+    }
+    .hero-img {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover; border-radius: 20px;
+      opacity: 0.8;
+    }
+    .hero-overlay {
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,0.5);
+      border-radius: 20px;
+    }
+    .hero-content {
+      position: relative; z-index: 2;
+      height: 100%;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: clamp(16px,3vw,48px) clamp(12px,3vw,40px);
+      gap: clamp(6px,1.5vw,16px); text-align: center;
+    }
+    .hero-title {
+      font-family: 'Cormorant Infant', serif;
+      font-style: italic; font-weight: 700;
+      color: var(--salmon);
+      font-size: clamp(26px, 5.5vw, 80px);
+      line-height: 1.05;
+    }
+    .hero-subtitle {
+      font-weight: 600; color: var(--green);
+      font-size: clamp(12px, 1.8vw, 25px);
+      max-width: 700px; line-height: 1.5;
+    }
+
+    /* tombol 360 — memotong batas bawah hero */
+    .hero-btn-wrap {
+      position: absolute;
+      bottom: -36px;          /* setengah keluar ke bawah */
+      left: 50%; transform: translateX(-50%);
+      z-index: 10;
+      filter: drop-shadow(5px 5px 4px rgba(0,0,0,0.35));
+    }
+    .btn-360 {
+      display: block;
+      padding: clamp(10px,1.2vw,14px) clamp(36px,6vw,80px);
+      border-radius: 20px;
+      border: 6px solid var(--cream);
+      background: var(--salmon);
+      color: var(--cream);
+      font-family: 'Cormorant Infant', serif;
+      font-weight: 400;
+      font-size: clamp(14px, 1.8vw, 30px);
+      letter-spacing: 0.06em;
+      cursor: pointer; text-decoration: none;
+      transition: background 0.15s, transform 0.12s;
+      white-space: nowrap;
+    }
+    .btn-360:hover { background: #c0806e; transform: scale(1.02); }
+
+    /* ══ SECTION TITLE ══ */
+    .section-title {
+      font-family: 'Cormorant Infant', serif;
+      font-style: italic; font-weight: 700;
+      color: var(--salmon);
+      font-size: clamp(20px, 3vw, 40px);
+      text-align: center;
+      margin: clamp(16px,2.5vw,30px) 0 clamp(8px,1.5vw,16px);
+    }
+
+    /* ══ HOME ══ */
+    .home-body {
+      padding-top: clamp(48px, 5vw, 72px); /* ruang untuk tombol yang keluar */
+      flex: 1;
+    }
+    .home-desc {
+      padding: clamp(16px,3vw,40px) clamp(16px,7vw,100px) clamp(24px,4vw,56px);
+    }
+    .home-desc p {
+      font-size: clamp(12px, 1.6vw, 23px);
+      text-align: center; line-height: 1.75;
+      max-width: 900px; margin: 0 auto;
+      color: var(--green);
+    }
+
+    /* ══ INFORMASI: SEJARAH ══ */
+    .info-wrap { padding: 0 15px clamp(20px,3vw,40px); }
+    .sejarah-box {
+      background: rgba(133,149,86,0.75);
+      border-radius: 10px;
+      padding: clamp(12px,2vw,22px) clamp(16px,3vw,36px);
+      font-size: clamp(12px, 1.4vw, 17px);
+      line-height: 1.85; text-align: center;
+      color: var(--teal);
+    }
+    .visi-text {
+      font-size: clamp(12px,1.5vw,17px);
+      text-align: center; line-height: 1.75;
+      max-width: 900px; margin: 0 auto;
+      padding: 0 clamp(12px,3vw,32px);
+      color: var(--teal);
+    }
+    .misi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+      gap: clamp(8px,1.5vw,20px);
+      padding: 0 15px clamp(20px,3vw,40px);
+    }
+    .misi-card {
+      position: relative;
+      background: var(--green);
+      border-radius: 10px;
+      padding: clamp(40px,5vw,64px) clamp(12px,1.8vw,24px) clamp(16px,2vw,28px);
+      text-align: center;
+      font-size: clamp(11px,1.3vw,17px);
+      line-height: 1.6; color: var(--teal);
+    }
+    .misi-icon-wrap {
+      position: absolute;
+      top: -28px; left: 50%; transform: translateX(-50%);
+      width: clamp(50px,5.5vw,90px); height: clamp(50px,5.5vw,90px);
+      background: var(--green);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .misi-icon { width: 60%; height: 60%; }
+    .misi-outer {
+      padding-top: clamp(32px,3.5vw,44px);
+    }
+
+    /* ══ KOLEKSI ══ */
+    .koleksi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(clamp(120px,15vw,200px),1fr));
+      gap: clamp(10px,1.5vw,20px);
+      padding: 0 15px clamp(20px,3vw,40px);
+    }
+    .koleksi-card {
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.13s, filter 0.13s;
+    }
+    .koleksi-card:hover { transform: translateY(-3px); }
+    .koleksi-card:active { transform: scale(0.94); filter: brightness(0.72); }
+    .koleksi-img {
+      width: 100%; aspect-ratio: 1/1;
+      object-fit: cover; display: block;
+      border-radius: 95px 5px 0px 0px;   /* dari Figma */
+    }
+    .koleksi-label-box {
+      background: var(--green);
+      border-radius: 0px 0px 95px 0px;   /* dari Figma */
+      padding: clamp(8px,1vw,14px) clamp(8px,1vw,14px);
+      text-align: center;
+    }
+    .koleksi-label {
+      font-size: clamp(10px,1.1vw,17px);
+      font-weight: 600; color: var(--teal);
+    }
+
+    /* ══ MODAL KOLEKSI ══ */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.3);
+      z-index: 500; align-items: center; justify-content: center;
+      padding: 16px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: #fff;
+      border-radius: 25px;
+      width: min(900px, 98vw);
+      max-height: 90vh;
+      overflow: hidden;
+      position: relative;
+      display: grid;
+      grid-template-columns: auto 1fr;
+    }
+    @media (max-width:580px) { .modal-box { grid-template-columns: 1fr; } }
+    .modal-left {
+      display: flex; flex-direction: row;
+      gap: 8px; padding: 16px;
+      background: #f5f5f5;
+      align-items: flex-start;
+    }
+    .modal-main-img {
+      width: clamp(180px,28vw,400px);
+      aspect-ratio: 1/1;
+      object-fit: cover; border-radius: 10px;
+    }
+    .modal-thumbs { display: flex; flex-direction: column; gap: 8px; }
+    .modal-thumb {
+      width: clamp(60px,9vw,135px);
+      height: clamp(60px,9vw,135px);
+      object-fit: cover; border-radius: 10px;
+      cursor: pointer; opacity: 0.7;
+      transition: opacity 0.13s;
+      border: 2px solid transparent;
+    }
+    .modal-thumb.active { opacity: 1; border-color: var(--salmon); }
+    .modal-thumb:hover { opacity: 1; }
+    .modal-right {
+      padding: clamp(20px,3vw,40px);
+      display: flex; flex-direction: column;
+      justify-content: center; gap: 14px;
+    }
+    .modal-title {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 600;
+      font-size: clamp(18px,2.5vw,35px);
+      color: var(--teal); text-align: center;
+    }
+    .modal-desc {
+      font-size: clamp(12px,1.2vw,17px);
+      line-height: 1.7; color: var(--teal);
+      text-align: center;
+    }
+    .modal-close {
+      position: absolute; top: 14px; right: 16px;
+      background: none; border: none;
+      font-size: 20px; cursor: pointer;
+      color: #444; line-height: 1;
+      transition: color 0.13s;
+    }
+    .modal-close:hover { color: var(--salmon); }
+
+    /* ══ LOKASI OVERVIEW ══ */
+    .lokasi-cards {
+      display: flex; flex-direction: column;
+      gap: clamp(12px,2vw,20px);
+      padding: 0 15px clamp(20px,3vw,40px);
+    }
+    .lokasi-card {
+      border-radius: 14px; overflow: hidden;
+      position: relative;
+      height: clamp(160px,20vw,262px);
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+    .lokasi-card:hover { transform: scale(1.003); }
+    .lokasi-card img,
+    .lokasi-card .map-placeholder {
+      width: 100%; height: 100%;
+      object-fit: cover; display: block;
+    }
+    .lokasi-card-overlay {
+      position: absolute; inset: 0;
+      background: rgba(14,51,35,0.75);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 6px; text-align: center; padding: 16px;
+    }
+    .lokasi-card-overlay h3 {
+      font-family: 'Cormorant Infant', serif;
+      font-style: italic; font-weight: 700;
+      color: var(--salmon);
+      font-size: clamp(18px,3vw,35px);
+    }
+    .lokasi-card-overlay p {
+      color: #fff; font-size: clamp(11px,1.3vw,17px);
+    }
+
+    /* ══ SUB-PAGES LOKASI (full view) ══ */
+    .lokasi-subpage { flex: 1; display: flex; flex-direction: column; }
+    .lokasi-full-map {
+      flex: 1;
+      margin: 0 15px clamp(12px,2vw,20px);
+      border-radius: 14px;
+      min-height: clamp(300px,50vw,664px);
+      overflow: hidden;
+    }
+    .lokasi-full-map img { width:100%; height:100%; object-fit:cover; display:block; }
+    #map-webgis, #map-peta { width:100%; height:100%; border-radius:14px; }
+    .webgis-wrap { position: relative; }
+    .layer-control {
+      position: absolute; top: 14px; right: 14px;
+      background: var(--cream); border-radius: 10px;
+      padding: 10px 14px; z-index: 10;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+      font-size: clamp(10px,1.1vw,13px);
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .layer-control label { display:flex; align-items:center; gap:6px; cursor:pointer; color:var(--green); font-weight:500; }
+    .layer-control input[type=checkbox] { accent-color: var(--salmon); width:13px; height:13px; }
+    .denah-img-wrap {
+      flex: 1;
+      display: flex; justify-content: center; align-items: flex-start;
+      padding: 0 15px clamp(12px,2vw,20px);
+    }
+    .denah-img-wrap img {
+      max-width: min(697px, 100%);
+      border: 1px solid #000; display: block;
+    }
+
+    /* ══ TENTANG ══ */
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px,1fr));
+      gap: clamp(10px,1.8vw,20px);
+      padding: 0 15px clamp(20px,3vw,40px);
+    }
+    .team-card {
+      display: flex; flex-direction: column;
+      border-radius: 10px; overflow: hidden;
+    }
+    .team-card img {
+      width: 100%; aspect-ratio: 1/1;
+      object-fit: cover; object-position: top;
+      border-radius: 10px 10px 0 0;
+      display: block;
+    }
+    .team-card-body {
+      background: var(--teal);
+      border-radius: 10px;
+      padding: clamp(8px,1.3vw,14px);
+      color: var(--cream); text-align: center;
+    }
+    .team-name { font-weight: 700; font-size: clamp(12px,1.4vw,17px); color: var(--salmon); margin-bottom: 3px; }
+    .team-nim { font-weight: 500; font-size: clamp(9px,1vw,11px); color: var(--salmon); opacity: 0.9; margin-bottom: 6px; }
+    .team-role { font-size: clamp(10px,1.1vw,14px); line-height: 1.5; }
+
+    /* ══ FOOTER ══ */
+    footer {
+      background: var(--teal);
+      padding: clamp(20px,3vw,36px) clamp(14px,3vw,36px);
+      margin-top: auto; text-align: center;
+    }
+    footer p { color: var(--salmon); font-size: clamp(10px,1.1vw,15px); line-height: 1.9; }
+    footer .footer-title { font-size: clamp(11px,1.2vw,15px); font-weight: 500; }
+
+    /* ══ MOBILE ══ */
+    .hamburger { display:none; flex-direction:column; gap:5px; cursor:pointer; padding:6px; border-radius:8px; background:transparent; border:none; margin-left:auto; }
+    .hamburger span { display:block; width:22px; height:2px; background:var(--green); border-radius:2px; transition:all 0.26s; }
+    .hamburger.open span:nth-child(1) { transform:rotate(45deg) translate(5px,5px); }
+    .hamburger.open span:nth-child(2) { opacity:0; }
+    .hamburger.open span:nth-child(3) { transform:rotate(-45deg) translate(5px,-5px); }
+    .nav-links { display:flex; align-items:center; gap:clamp(2px,1.2vw,16px); flex-wrap:wrap; }
+    @media (max-width:540px) {
+      .navbar-wrap { padding: 10px 12px 6px; }
+      nav { flex-wrap:nowrap; justify-content:space-between; }
+      .hamburger { display:flex; }
+      .nav-links { display:none; width:100%; flex-direction:column; align-items:flex-start; gap:2px; padding-top:6px; }
+      .nav-links.open { display:flex; }
+      .nav-item { width:100%; }
+      .nav-link { width:100%; }
+      .dropdown-menu { position:static; box-shadow:none; background:rgba(0,0,0,0.04); border-radius:8px; margin-top:2px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ NAVBAR ══ -->
+<div class="navbar-wrap">
+  <nav>
+    <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+    <div class="nav-links" id="nav-links">
+      <div class="nav-item">
+        <a class="nav-link active" data-page="beranda" onclick="showPage('beranda')">Beranda</a>
+      </div>
+      <div class="nav-item" id="nav-informasi">
+        <a class="nav-link" data-page="informasi" onclick="toggleDropdown('nav-informasi',event)">
+          Informasi <span class="arrow">▾</span>
+        </a>
+        <div class="dropdown-menu">
+          <button class="dropdown-item" data-sub="sejarah" onclick="showSubPage('sejarah')">SEJARAH</button>
+          <div class="dropdown-divider"></div>
+          <button class="dropdown-item" data-sub="koleksi" onclick="showSubPage('koleksi')">KOLEKSI</button>
+        </div>
+      </div>
+      <div class="nav-item" id="nav-lokasi">
+        <a class="nav-link" data-page="lokasi" onclick="showPage('lokasi')">Lokasi</a>
+      </div>
+      <div class="nav-item">
+        <a class="nav-link" data-page="tentang" onclick="showPage('tentang')">Tentang</a>
+      </div>
+    </div>
+  </nav>
+</div>
+
+<!-- ══════════ BERANDA ══════════ -->
+<div class="page active" id="page-beranda">
+  <div class="hero">
+    <img class="hero-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Gapura_Kotagede.jpg/1280px-Gapura_Kotagede.jpg" alt="Museum Kotagede" />
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <p class="hero-subtitle">Mulai pengalaman Anda dengan Virtual Tour untuk menjelajahi Kotagede secara interaktif sebelum merasakan langsung suasananya.</p>
+    </div>
+    <!-- Tombol memotong batas bawah hero -->
+    <div class="hero-btn-wrap">
+      <a class="btn-360" onclick="showLokasiSub('tour')">360° VIRTUAL TOUR</a>
+    </div>
+  </div>
+
+  <div class="home-body">
+    <div class="home-desc">
+      <p>Menghadirkan kekayaan budaya Kotagede melalui perpaduan sejarah, tradisi, dan kehidupan masyarakat yang masih hidup hingga kini. Setiap sudutnya menyimpan cerita yang membentuk identitas kawasan ini sebagai living museum.</p>
+    </div>
+  </div>
+
+  <footer>
+    <p class="footer-title">LIVING MUSEUM KOTAGEDE</p>
+    <p>Program Studi Teknik Geomatika</p>
+    <p>Universitas Pembangunan Nasional "Veteran" Yogyakarta</p>
+    <p>Tim Pengembang:<br>Gusti Bagus Rama &bull; Hilaliyyah Hafidz &bull; Azlya Prena Sanustika &bull; Octo Cahya Ramadhan &bull; Achmad David Thomas</p>
+    <p>&copy; 2026</p>
+  </footer>
+</div>
+
+<!-- ══════════ INFORMASI: SEJARAH ══════════ -->
+<div class="page" id="page-sejarah">
+  <div class="hero">
+    <img class="hero-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Gapura_Kotagede.jpg/1280px-Gapura_Kotagede.jpg" alt="Museum Kotagede" />
+    <div class="hero-overlay"></div>
+    <div class="hero-content"><h1 class="hero-title">INFORMASI</h1></div>
+  </div>
+
+  <h2 class="section-title">SEJARAH</h2>
+  <div class="info-wrap">
+    <div class="sejarah-box">
+      Pemerintah Daerah Istimewa Yogyakarta melalui Dinas Kebudayaan bersama Yayasan Pusdok mengembangkan konsep living museum di Kotagede. Untuk menghubungkan pengunjung dengan kawasan tersebut, dibuat Intro Living Museum Kotagede sebagai pusat informasi sekaligus pengantar. Fasilitas ini diharapkan menjadi titik awal bagi wisatawan untuk mengenal dan tertarik mengunjungi living museum Kotagede, dan berlokasi di Rumah Kalang sebagai salah satu warisan budaya penting milik Pemda DIY.
+    </div>
+  </div>
+
+  <h2 class="section-title">VISI</h2>
+  <p class="visi-text" style="margin-bottom:clamp(16px,2vw,28px);">Terwujudnya upaya perlindungan, pelestarian, dan pemanfaatan berbagai bentuk aset budaya dalam suatu model pengembangan living museum</p>
+
+  <h2 class="section-title">MISI</h2>
+  <div class="misi-outer">
+    <div class="misi-grid">
+      <div class="misi-card">
+        <div class="misi-icon-wrap">
+          <svg class="misi-icon" viewBox="0 0 64 64" fill="none"><circle cx="22" cy="20" r="9" stroke="#F0EFCD" stroke-width="3.5" fill="none"/><circle cx="42" cy="20" r="9" stroke="#F0EFCD" stroke-width="3.5" fill="none"/><path d="M4 52c0-10 8-17 18-17s18 7 18 17" stroke="#F0EFCD" stroke-width="3.5" stroke-linecap="round" fill="none"/><path d="M40 35c8 0 14 6 14 15" stroke="#F0EFCD" stroke-width="3.5" stroke-linecap="round" fill="none"/></svg>
+        </div>
+        Mendorong pemahaman dan partisipasi masyarakat dalam mendukung museum.
+      </div>
+      <div class="misi-card">
+        <div class="misi-icon-wrap">
+          <svg class="misi-icon" viewBox="0 0 64 64" fill="none"><path d="M32 10L6 24l26 14 26-14-26-14z" stroke="#F0EFCD" stroke-width="3.5" stroke-linejoin="round" fill="none"/><path d="M16 31v14c0 5 7 9 16 9s16-4 16-9V31" stroke="#F0EFCD" stroke-width="3.5" stroke-linecap="round" fill="none"/></svg>
+        </div>
+        Meningkatkan kesadaran akan pentingnya living museum berbasis pengetahuan lokal.
+      </div>
+      <div class="misi-card">
+        <div class="misi-icon-wrap">
+          <svg class="misi-icon" viewBox="0 0 64 64" fill="none"><path d="M8 38l12-10h8l8-8h8l12 10" stroke="#F0EFCD" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M20 28l8 8-6 6-10-8" stroke="#F0EFCD" stroke-width="3.5" stroke-linejoin="round" fill="none"/><path d="M28 36l10 8" stroke="#F0EFCD" stroke-width="3.5" stroke-linecap="round"/><path d="M40 30l8 6-12 10" stroke="#F0EFCD" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+        </div>
+        Mengembangkan potensi masyarakat agar menjadi pelaku sekaligus penerima manfaat, baik secara budaya maupun ekonomi.
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p class="footer-title">LIVING MUSEUM KOTAGEDE</p>
+    <p>Program Studi Teknik Geomatika</p>
+    <p>Universitas Pembangunan Nasional "Veteran" Yogyakarta</p>
+    <p>Tim Pengembang:<br>Gusti Bagus Rama &bull; Hilaliyyah Hafidz &bull; Azlya Prena Sanustika &bull; Octo Cahya Ramadhan &bull; Achmad David Thomas</p>
+    <p>&copy; 2026</p>
+  </footer>
+</div>
+
+<!-- ══════════ INFORMASI: KOLEKSI ══════════ -->
+<div class="page" id="page-koleksi">
+  <div class="hero">
+    <img class="hero-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Gapura_Kotagede.jpg/1280px-Gapura_Kotagede.jpg" alt="Museum Kotagede" />
+    <div class="hero-overlay"></div>
+    <div class="hero-content"><h1 class="hero-title">INFORMASI</h1></div>
+  </div>
+  <h2 class="section-title">SEJARAH</h2>
+  <div class="koleksi-grid" id="koleksi-grid"></div>
+  <footer>
+    <p class="footer-title">LIVING MUSEUM KOTAGEDE</p>
+    <p>Program Studi Teknik Geomatika</p>
+    <p>Universitas Pembangunan Nasional "Veteran" Yogyakarta</p>
+    <p>Tim Pengembang:<br>Gusti Bagus Rama &bull; Hilaliyyah Hafidz &bull; Azlya Prena Sanustika &bull; Octo Cahya Ramadhan &bull; Achmad David Thomas</p>
+    <p>&copy; 2026</p>
+  </footer>
+</div>
+
+<!-- ══════════ MODAL KOLEKSI ══════════ -->
+<div class="modal-overlay" id="modal" onclick="closeModalOutside(event)">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-left">
+      <img class="modal-main-img" id="modal-main-img" src="" alt="" />
+      <div class="modal-thumbs" id="modal-thumbs"></div>
+    </div>
+    <div class="modal-right">
+      <div class="modal-title" id="modal-title"></div>
+      <p class="modal-desc" id="modal-desc"></p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ LOKASI OVERVIEW ══════════ -->
+<div class="page" id="page-lokasi">
+  <div class="hero">
+    <img class="hero-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Gapura_Kotagede.jpg/1280px-Gapura_Kotagede.jpg" alt="Museum Kotagede" />
+    <div class="hero-overlay"></div>
+    <div class="hero-content"><h1 class="hero-title">LOKASI</h1></div>
+  </div>
+  <h2 class="section-title">SUDAH TAU JALANNYA BELUM?</h2>
+  <div class="lokasi-cards">
+    <div class="lokasi-card" onclick="showLokasiSub('webgis')">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Gapura_Kotagede.jpg/1280px-Gapura_Kotagede.jpg" alt="WebGIS" />
+      <div class="lokasi-card-overlay">
+        <h3>WEBGIS</h3>
+        <p>Menyajikan informasi dan analisis spasial kawasan museum</p>
+      </div>
+    </div>
+    <div class="lokasi-card" onclick="showLokasiSub('peta')">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Gapura_Kotagede.jpg/1280px-Gapura_Kotagede.jpg" alt="Peta Lokasi" />
+      <div class="lokasi-card-overlay">
+        <h3>PETA LOKASI</h3>
+        <p>Memudahkan pengunjung menemukan rute menuju museum</p>
+      </div>
+    </div>
+    <div class="lokasi-card" onclick="showLokasiSub('denah')">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Kotagede_heritage_buildings.jpg/1280px-Kotagede_heritage_buildings.jpg" alt="Denah" />
+      <div class="lokasi-card-overlay">
+        <h3>DENAH MUSEUM</h3>
+        <p>Menampilkan tata letak ruangan dan fasilitas museum</p>
+      </div>
+    </div>
+  </div>
+  <footer>
+    <p class="footer-title">LIVING MUSEUM KOTAGEDE</p>
+    <p>Program Studi Teknik Geomatika</p>
+    <p>Universitas Pembangunan Nasional "Veteran" Yogyakarta</p>
+    <p>Tim Pengembang:<br>Gusti Bagus Rama &bull; Hilaliyyah Hafidz &bull; Azlya Prena Sanustika &bull; Octo Cahya Ramadhan &bull; Achmad David Thomas</p>
+    <p>&copy; 2026</p>
+  </footer>
+</div>
+
+<!-- ══════════ SUB: 360 TOUR ══════════ -->
+<div class="page" id="page-tour">
+  <div class="hero">
+    <img class="hero-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Gapura_Kotagede.jpg/1280px-Gapura_Kotagede.jpg" alt="Museum Kotagede" />
+    <div class="hero-overlay"></div>
+    <div class="hero-content"><h1 class="hero-title">LOKASI</h1></div>
+  </div>
+  <div class="lokasi-subpage">
+    <div class="lokasi-full-map" style="background:#222; display:flex; align-items:center; justify-content:center;">
+      <p style="color:#fff; font-size:1.2rem; text-align:center; padding:20px;">360° Virtual Tour<br><span style="font-size:0.85rem; opacity:0.7;">Embed iframe virtual tour di sini</span></p>
+    </div>
+  </div>
+  <footer>
+    <p class="footer-title">LIVING MUSEUM KOTAGEDE</p>
+    <p>Program Studi Teknik Geomatika</p>
+    <p>Universitas Pembangunan Nasional "Veteran" Yogyakarta</p>
+    <p>Tim Pengembang:<br>Gusti Bagus Rama &bull; Hilaliyyah Hafidz &bull; Azlya Prena Sanustika &bull; Octo Cahya Ramadhan &bull; Achmad David Thomas</p>
+    <p>&copy; 2026</p>
+  </footer>
+</div>
+
+<!-- ══════════ SUB: WEBGIS ══════════ -->
+<div class="page" id="page-webgis">
+  <div class="hero">
+    <img class="hero-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Gapura_Kotagede.jpg/1280px-Gapura_Kotagede.jpg" alt="Museum Kotagede" />
+    <div class="hero-overlay"></div>
+    <div class="hero-content"><h1 class="hero-title">LOKASI</h1></div>
+  </div>
+  <div class="lokasi-subpage">
+    <div class="lokasi-full-map webgis-wrap">
+      <div id="map-webgis"></div>
+      <div class="layer-control">
+        <label><input type="checkbox" checked onchange="toggleLayer('museum',this.checked)"> Museum</label>
+        <label><input type="checkbox" checked onchange="toggleLayer('hotel',this.checked)"> Hotel</label>
+        <label><input type="checkbox" checked onchange="toggleLayer('restoran',this.checked)"> Restoran</label>
+        <label><input type="checkbox" checked onchange="toggleLayer('ibadah',this.checked)"> Tempat Ibadah</label>
+        <label><input type="checkbox" checked onchange="toggleLayer('kesehatan',this.checked)"> Fasilitas Kesehatan</label>
+      </div>
+    </div>
+  </div>
+  <footer>
+    <p class="footer-title">LIVING MUSEUM KOTAGEDE</p>
+    <p>Program Studi Teknik Geomatika</p>
+    <p>Universitas Pembangunan Nasional "Veteran" Yogyakarta</p>
+    <p>Tim Pengembang:<br>Gusti Bagus Rama &bull; Hilaliyyah Hafidz &bull; Azlya Prena Sanustika &bull; Octo Cahya Ramadhan &bull; Achmad David Thomas</p>
+    <p>&copy; 2026</p>
+  </footer>
+</div>
+
+<!-- ══════════ SUB: PETA LOKASI ══════════ -->
+<div class="page" id="page-peta">
+  <div class="hero">
+    <img class="hero-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Gapura_Kotagede.jpg/1280px-Gapura_Kotagede.jpg" alt="Museum Kotagede" />
+    <div class="hero-overlay"></div>
+    <div class="hero-content"><h1 class="hero-title">LOKASI</h1></div>
+  </div>
+  <div class="lokasi-subpage">
+    <div class="lokasi-full-map">
+      <div id="map-peta"></div>
+    </div>
+  </div>
+  <footer>
+    <p class="footer-title">LIVING MUSEUM KOTAGEDE</p>
+    <p>Program Studi Teknik Geomatika</p>
+    <p>Universitas Pembangunan Nasional "Veteran" Yogyakarta</p>
+    <p>Tim Pengembang:<br>Gusti Bagus Rama &bull; Hilaliyyah Hafidz &bull; Azlya Prena Sanustika &bull; Octo Cahya Ramadhan &bull; Achmad David Thomas</p>
+    <p>&copy; 2026</p>
+  </footer>
+</div>
+
+<!-- ══════════ SUB: DENAH ══════════ -->
+<div class="page" id="page-denah">
+  <div class="hero">
+    <img class="hero-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Gapura_Kotagede.jpg/1280px-Gapura_Kotagede.jpg" alt="Museum Kotagede" />
+    <div class="hero-overlay"></div>
+    <div class="hero-content"><h1 class="hero-title">LOKASI</h1></div>
+  </div>
+  <div class="lokasi-subpage">
+    <div class="denah-img-wrap">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Kotagede_heritage_buildings.jpg/1280px-Kotagede_heritage_buildings.jpg" alt="Denah Museum" style="width:100%; max-width:697px;" />
+    </div>
+  </div>
+  <footer>
+    <p class="footer-title">LIVING MUSEUM KOTAGEDE</p>
+    <p>Program Studi Teknik Geomatika</p>
+    <p>Universitas Pembangunan Nasional "Veteran" Yogyakarta</p>
+    <p>Tim Pengembang:<br>Gusti Bagus Rama &bull; Hilaliyyah Hafidz &bull; Azlya Prena Sanustika &bull; Octo Cahya Ramadhan &bull; Achmad David Thomas</p>
+    <p>&copy; 2026</p>
+  </footer>
+</div>
+
+<!-- ══════════ TENTANG ══════════ -->
+<div class="page" id="page-tentang">
+  <div class="hero">
+    <img class="hero-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Gapura_Kotagede.jpg/1280px-Gapura_Kotagede.jpg" alt="Museum Kotagede" />
+    <div class="hero-overlay"></div>
+    <div class="hero-content"><h1 class="hero-title">TENTANG</h1></div>
+  </div>
+  <h2 class="section-title">KENALAN YUK SAMA TIM KAMI</h2>
+  <div class="team-grid">
+    <div class="team-card">
+      <img src="https://placehold.co/224x224/c8cb9a/105361?text=GBR" alt="Gusti Bagus Rama" />
+      <div class="team-card-body">
+        <div class="team-name">Gusti Bagus Rama</div>
+        <div class="team-nim">117230009</div>
+        <div class="team-role">360° Virtual Tour Specialist</div>
+      </div>
+    </div>
+    <div class="team-card">
+      <img src="https://placehold.co/224x224/c8cb9a/105361?text=HH" alt="Hilaliyyah Hafidz" />
+      <div class="team-card-body">
+        <div class="team-name">Hilaliyyah Hafidz</div>
+        <div class="team-nim">117230023</div>
+        <div class="team-role">UI Designer</div>
+      </div>
+    </div>
+    <div class="team-card">
+      <img src="https://placehold.co/224x224/c8cb9a/105361?text=APS" alt="Azlya Prena" />
+      <div class="team-card-body">
+        <div class="team-name">Azlya Prena</div>
+        <div class="team-nim">117230057</div>
+        <div class="team-role">Spatial Data Analyst</div>
+      </div>
+    </div>
+    <div class="team-card">
+      <img src="https://placehold.co/224x224/c8cb9a/105361?text=OCR" alt="Octo Cahya" />
+      <div class="team-card-body">
+        <div class="team-name">Octo Cahya</div>
+        <div class="team-nim">117230058</div>
+        <div class="team-role">WebGIS Developer</div>
+      </div>
+    </div>
+    <div class="team-card">
+      <img src="https://placehold.co/224x224/c8cb9a/105361?text=ADT" alt="Ahmad David" />
+      <div class="team-card-body">
+        <div class="team-name">Ahmad David</div>
+        <div class="team-nim">117230086</div>
+        <div class="team-role">GIS Analyst</div>
+      </div>
+    </div>
+  </div>
+  <footer>
+    <p class="footer-title">LIVING MUSEUM KOTAGEDE</p>
+    <p>Program Studi Teknik Geomatika</p>
+    <p>Universitas Pembangunan Nasional "Veteran" Yogyakarta</p>
+    <p>Tim Pengembang:<br>Gusti Bagus Rama &bull; Hilaliyyah Hafidz &bull; Azlya Prena Sanustika &bull; Octo Cahya Ramadhan &bull; Achmad David Thomas</p>
+    <p>&copy; 2026</p>
+  </footer>
+</div>
+
+<script>
+// ══ DATA KOLEKSI ══
+const koleksiData = [
+  { nama:'Genteng Sirap Kripik', desc:'Atap rumah joglo tradisional di Kotagede yang terbuat dari tanah liat dan berbentuk pipih', imgs:['https://placehold.co/400x400/859556/F0EFCD?text=GSK+1','https://placehold.co/135x135/859556/F0EFCD?text=GSK+2','https://placehold.co/135x135/859556/F0EFCD?text=GSK+3'] },
+  { nama:'Keris Luk 5', desc:'Senjata tradisional Jawa berbentuk bilah berlekuk yang memiliki nilai spiritual tinggi', imgs:['https://placehold.co/400x400/105361/F0EFCD?text=KL5','https://placehold.co/135x135/105361/F0EFCD?text=KL5+2'] },
+  { nama:'Batik Kotagede', desc:'Kain batik khas Kotagede dengan motif geometris yang mencerminkan filosofi hidup Jawa', imgs:['https://placehold.co/400x400/D5958B/F0EFCD?text=BK','https://placehold.co/135x135/D5958B/F0EFCD?text=BK+2'] },
+  { nama:'Perak Filigri', desc:'Kerajinan perak khas Kotagede dengan teknik anyaman kawat halus', imgs:['https://placehold.co/400x400/859556/F0EFCD?text=PF'] },
+  { nama:'Wayang Kulit', desc:'Boneka bayangan dari kulit sapi untuk pertunjukan wayang tradisional', imgs:['https://placehold.co/400x400/105361/F0EFCD?text=WK','https://placehold.co/135x135/105361/F0EFCD?text=WK+2'] },
+  { nama:'Gamelan Perunggu', desc:'Alat musik tradisional Jawa dari perunggu yang dimainkan secara ansambel', imgs:['https://placehold.co/400x400/D5958B/F0EFCD?text=GP'] },
+  { nama:'Batu Prasasti', desc:'Prasasti batu berisi catatan sejarah Kerajaan Mataram Islam di Kotagede', imgs:['https://placehold.co/400x400/859556/F0EFCD?text=BP','https://placehold.co/135x135/859556/F0EFCD?text=BP+2'] },
+  { nama:'Naskah Lontar', desc:'Manuskrip kuno di atas daun lontar berisi ajaran filsafat dan sejarah Jawa', imgs:['https://placehold.co/400x400/105361/F0EFCD?text=NL'] },
+  { nama:'Batik Parang', desc:'Motif batik klasik diagonal yang dahulu hanya boleh dikenakan bangsawan', imgs:['https://placehold.co/400x400/D5958B/F0EFCD?text=BPa'] },
+  { nama:'Ukiran Kayu Jati', desc:'Ornamen ukiran kayu jati penghias rumah-rumah tradisional Kotagede', imgs:['https://placehold.co/400x400/859556/F0EFCD?text=UKJ'] },
+  { nama:'Kendang Jawa', desc:'Alat musik pukul dari kulit pemimpin ritme dalam ansambel gamelan', imgs:['https://placehold.co/400x400/105361/F0EFCD?text=KJ'] },
+  { nama:'Topeng Panji', desc:'Topeng kayu bergaya Panji untuk pertunjukan tari topeng tradisional', imgs:['https://placehold.co/400x400/D5958B/F0EFCD?text=TP'] },
+  { nama:'Gerabah Kasongan', desc:'Tembikar tradisional dari tanah liat dibuat dengan teknik putar tangan', imgs:['https://placehold.co/400x400/859556/F0EFCD?text=GK'] },
+  { nama:'Cincin Perak', desc:'Perhiasan cincin perak khas Kotagede dengan ukiran motif tradisional Jawa', imgs:['https://placehold.co/400x400/105361/F0EFCD?text=CP'] },
+  { nama:'Blangkon Batik', desc:'Penutup kepala pria Jawa dari kain batik dilipat secara khusus', imgs:['https://placehold.co/400x400/D5958B/F0EFCD?text=BB'] },
+  { nama:'Lesung & Alu', desc:'Alat penumbuk padi tradisional masyarakat Kotagede sejak abad ke-16', imgs:['https://placehold.co/400x400/859556/F0EFCD?text=LA'] },
+  { nama:'Lampu Gantung Perak', desc:'Lampu hias perak filigri dari rumah-rumah bangsawan Kotagede', imgs:['https://placehold.co/400x400/105361/F0EFCD?text=LGP'] },
+  { nama:'Diorama Mataram', desc:'Miniatur 3D kehidupan Kerajaan Mataram Islam di Kotagede', imgs:['https://placehold.co/400x400/D5958B/F0EFCD?text=DM'] },
+  { nama:'Keris Luk 7', desc:'Varian keris tujuh lekukan melambangkan keberanian dan keteguhan hati', imgs:['https://placehold.co/400x400/859556/F0EFCD?text=KL7'] },
+  { nama:'Genteng Sirap Kripik', desc:'Atap rumah joglo tradisional di Kotagede yang terbuat dari tanah liat dan berbentuk pipih', imgs:['https://placehold.co/400x400/105361/F0EFCD?text=GSK+B'] },
+];
+
+// Render koleksi
+function renderKoleksi() {
+  const grid = document.getElementById('koleksi-grid');
+  grid.innerHTML = koleksiData.map((item, i) => `
+    <div class="koleksi-card" onclick="openModal(${i})">
+      <img class="koleksi-img" src="${item.imgs[0]}" alt="${item.nama}" loading="lazy" />
+      <div class="koleksi-label-box"><span class="koleksi-label">${item.nama}</span></div>
+    </div>
+  `).join('');
+}
+renderKoleksi();
+
+// ══ MODAL ══
+function openModal(i) {
+  const item = koleksiData[i];
+  document.getElementById('modal-title').textContent = item.nama;
+  document.getElementById('modal-desc').textContent = item.desc;
+  document.getElementById('modal-main-img').src = item.imgs[0];
+  const thumbs = document.getElementById('modal-thumbs');
+  thumbs.innerHTML = item.imgs.map((src, j) =>
+    `<img class="modal-thumb ${j===0?'active':''}" src="${src}" onclick="switchThumb(this,'${src}')" />`
+  ).join('');
+  document.getElementById('modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function switchThumb(el, src) {
+  document.getElementById('modal-main-img').src = src;
+  document.querySelectorAll('.modal-thumb').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function closeModalOutside(e) { if (e.target === document.getElementById('modal')) closeModal(); }
+
+// ══ NAVIGATION ══
+const infoSubs  = ['sejarah','koleksi'];
+const lokasiSubs = ['tour','webgis','peta','denah'];
+
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  document.querySelectorAll('.dropdown-item').forEach(d => d.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('open'));
+
+  if (infoSubs.includes(name)) {
+    document.querySelector('[data-page="informasi"]').classList.add('active');
+    document.querySelector(`[data-sub="${name}"]`).classList.add('active');
+  } else if (lokasiSubs.includes(name)) {
+    document.querySelector('[data-page="lokasi"]').classList.add('active');
+  } else {
+    const el = document.querySelector(`[data-page="${name}"]`);
+    if (el) el.classList.add('active');
+  }
+
+  document.getElementById('page-' + name).classList.add('active');
+  window.scrollTo(0, 0);
+  closeMenu();
+
+  if ((name === 'webgis') && !window._webgisInit) { setTimeout(initWebgis, 100); window._webgisInit = true; }
+  if ((name === 'peta')   && !window._petaInit)   { setTimeout(initPeta,   100); window._petaInit   = true; }
+}
+
+function showSubPage(sub) { showPage(sub); }
+function showLokasiSub(sub) { showPage(sub); }
+
+// ══ DROPDOWN ══
+function toggleDropdown(itemId, e) {
+  e.preventDefault();
+  const item = document.getElementById(itemId);
+  const isOpen = item.classList.contains('open');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('open'));
+  if (!isOpen) item.classList.add('open');
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('.nav-item'))
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('open'));
+});
+
+// ══ HAMBURGER ══
+document.getElementById('hamburger').addEventListener('click', function() {
+  this.classList.toggle('open');
+  document.getElementById('nav-links').classList.toggle('open');
+});
+function closeMenu() {
+  document.getElementById('hamburger').classList.remove('open');
+  document.getElementById('nav-links').classList.remove('open');
+}
+
+// ══ MAPS ══
+const museumLL = [-7.8712, 110.3772];
+let webgisMap, petaMap;
+const layers = {};
+
+function initWebgis() {
+  webgisMap = L.map('map-webgis', { scrollWheelZoom: false }).setView(museumLL, 15);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'© OpenStreetMap', maxZoom:19 }).addTo(webgisMap);
+
+  const poi = {
+    museum:    { color:'#105361', pts:[[-7.8712,110.3772,'Museum Kotagede']] },
+    hotel:     { color:'#2196F3', pts:[[-7.869,110.374,'Hotel Dekat Museum'],[-7.872,110.380,'Penginapan Kotagede']] },
+    restoran:  { color:'#FF9800', pts:[[-7.870,110.376,'Restoran Lokal'],[-7.873,110.378,'Warung Kotagede']] },
+    ibadah:    { color:'#9C27B0', pts:[[-7.868,110.372,'Masjid Al-Amin'],[-7.875,110.381,'Masjid Mataram']] },
+    kesehatan: { color:'#F44336', pts:[[-7.867,110.375,'Puskesmas Kotagede'],[-7.876,110.377,'Klinik Pratama']] },
+  };
+  for (const [key, val] of Object.entries(poi)) {
+    const g = L.layerGroup();
+    val.pts.forEach(([lat,lng,lbl]) => {
+      const ic = L.divIcon({ html:`<div style="background:${val.color};width:13px;height:13px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35)"></div>`, iconSize:[13,13], iconAnchor:[6,6], className:'' });
+      L.marker([lat,lng],{icon:ic}).bindPopup(lbl).addTo(g);
+    });
+    g.addTo(webgisMap); layers[key] = g;
+  }
+}
+
+function initPeta() {
+  petaMap = L.map('map-peta', { scrollWheelZoom: false }).setView(museumLL, 16);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'© OpenStreetMap', maxZoom:19 }).addTo(petaMap);
+  const ic = L.divIcon({ html:`<div style="background:#D5958B;width:15px;height:15px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4)"></div>`, iconSize:[15,15], iconAnchor:[7,7], className:'' });
+  L.marker(museumLL,{icon:ic}).addTo(petaMap).bindPopup('<b>Museum Kotagede</b>').openPopup();
+}
+
+function toggleLayer(name, visible) {
+  if (!webgisMap || !layers[name]) return;
+  visible ? layers[name].addTo(webgisMap) : webgisMap.removeLayer(layers[name]);
+}
+</script>
+</body>
+</html>

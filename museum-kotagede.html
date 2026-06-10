@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WebGIS Living Museum Kotagede</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <style>
+    :root {
+      --cream:   #f0edda;
+      --teal:    #1a4a4a;
+      --salmon:  #c97b72;
+      --green:   #4a6741;
+      --card-bg: #c8cb9a55;
+      --nav-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: var(--cream);
+      color: var(--green);
+      min-height: 100vh;
+    }
+
+    /* ── NAVBAR ── */
+    .navbar-wrap {
+      padding: 14px 16px 10px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    nav {
+      background: var(--cream);
+      border-radius: 14px;
+      box-shadow: var(--nav-shadow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(8px, 3vw, 40px);
+      padding: 8px clamp(12px, 3vw, 24px);
+      flex-wrap: wrap;
+    }
+
+    .nav-link {
+      position: relative;
+      padding: 6px clamp(10px, 2vw, 20px);
+      border-radius: 999px;
+      font-family: 'Poppins', sans-serif;
+      font-size: clamp(14px, 2vw, 20px);
+      color: var(--green);
+      text-decoration: none;
+      font-weight: 400;
+      transition: color 0.2s;
+      cursor: pointer;
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    .nav-link.active {
+      color: var(--cream);
+      font-weight: 600;
+    }
+
+    .nav-link.active::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--salmon);
+      border-radius: 999px;
+      z-index: -1;
+    }
+
+    /* ── PAGES ── */
+    .page { display: none; flex-direction: column; min-height: calc(100vh - 70px); }
+    .page.active { display: flex; }
+
+    /* ── HERO ── */
+    .hero {
+      margin: 0 clamp(8px, 2vw, 16px) clamp(10px, 2vw, 16px);
+      border-radius: 18px;
+      overflow: hidden;
+      position: relative;
+      min-height: clamp(220px, 35vw, 443px);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .hero img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.85;
+    }
+
+    .hero-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: clamp(20px, 4vw, 60px) clamp(16px, 4vw, 40px);
+      gap: clamp(10px, 2vw, 20px);
+      text-align: center;
+    }
+
+    .hero-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-weight: 700;
+      color: var(--salmon);
+      font-size: clamp(32px, 7vw, 100px);
+      line-height: 1.05;
+    }
+
+    .hero-subtitle {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 600;
+      color: var(--green);
+      font-size: clamp(14px, 2.5vw, 30px);
+      max-width: 700px;
+      line-height: 1.4;
+    }
+
+    .hero-btn {
+      margin-top: 8px;
+      padding: clamp(10px, 1.5vw, 16px) clamp(24px, 5vw, 52px);
+      border-radius: 14px;
+      border: 5px solid var(--cream);
+      background: var(--salmon);
+      color: var(--cream);
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(16px, 2.5vw, 35px);
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s, transform 0.15s;
+      display: inline-block;
+    }
+
+    .hero-btn:hover { background: #b86b62; transform: scale(1.02); }
+
+    /* ── SECTION TITLE ── */
+    .section-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-weight: 400;
+      color: var(--salmon);
+      font-size: clamp(24px, 4vw, 48px);
+      text-align: center;
+      margin: clamp(20px, 3vw, 36px) 0 clamp(12px, 2vw, 20px);
+    }
+
+    /* ── HOME DESCRIPTION ── */
+    .home-desc {
+      padding: clamp(24px, 4vw, 56px) clamp(20px, 8vw, 120px);
+      flex: 1;
+    }
+
+    .home-desc p {
+      font-size: clamp(14px, 2vw, 24px);
+      text-align: center;
+      line-height: 1.7;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    /* ── INFORMATION PAGE ── */
+    .info-section {
+      padding: 0 clamp(16px, 5vw, 60px) clamp(20px, 3vw, 40px);
+    }
+
+    .sejarah-box {
+      background: #c8cb9a;
+      border-radius: 12px;
+      padding: clamp(16px, 3vw, 28px) clamp(20px, 4vw, 36px);
+      font-size: clamp(13px, 1.8vw, 18px);
+      line-height: 1.8;
+      color: var(--green);
+    }
+
+    .visi-text {
+      font-size: clamp(14px, 2vw, 22px);
+      text-align: center;
+      line-height: 1.7;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 clamp(16px, 4vw, 40px);
+    }
+
+    .misi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: clamp(12px, 2vw, 24px);
+      padding: 0 clamp(16px, 5vw, 60px) clamp(24px, 4vw, 48px);
+    }
+
+    .misi-card {
+      background: #c8cb9a;
+      border-radius: 14px;
+      padding: clamp(20px, 3vw, 32px) clamp(16px, 2vw, 24px);
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      font-size: clamp(13px, 1.6vw, 17px);
+      line-height: 1.6;
+      color: var(--green);
+    }
+
+    .misi-icon {
+      width: clamp(44px, 6vw, 64px);
+      height: clamp(44px, 6vw, 64px);
+      opacity: 0.65;
+    }
+
+    /* ── LOCATION PAGE ── */
+    .location-img-wrap {
+      margin: 0 clamp(16px, 3vw, 30px) clamp(16px, 2vw, 24px);
+      border-radius: 14px;
+      overflow: hidden;
+      height: clamp(180px, 28vw, 360px);
+    }
+
+    .location-img-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    #map {
+      margin: 0 clamp(16px, 3vw, 30px) clamp(16px, 2vw, 24px);
+      border-radius: 14px;
+      height: clamp(220px, 32vw, 420px);
+      overflow: hidden;
+      z-index: 1;
+    }
+
+    /* ── ABOUT PAGE ── */
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: clamp(12px, 2vw, 20px);
+      padding: 0 clamp(16px, 4vw, 40px) clamp(24px, 4vw, 48px);
+    }
+
+    .team-card {
+      background: var(--teal);
+      border-radius: 16px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .team-card img {
+      width: 100%;
+      aspect-ratio: 3/4;
+      object-fit: cover;
+      object-position: top;
+    }
+
+    .team-card-body {
+      padding: clamp(10px, 2vw, 16px);
+      color: var(--cream);
+      text-align: center;
+    }
+
+    .team-name {
+      font-weight: 600;
+      font-size: clamp(13px, 1.8vw, 17px);
+      color: var(--salmon);
+      line-height: 1.3;
+      margin-bottom: 4px;
+    }
+
+    .team-nim {
+      font-size: clamp(11px, 1.4vw, 14px);
+      opacity: 0.8;
+      margin-bottom: 8px;
+    }
+
+    .team-role {
+      font-size: clamp(11px, 1.4vw, 14px);
+      line-height: 1.5;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--teal);
+      padding: clamp(24px, 4vw, 40px) clamp(16px, 4vw, 40px);
+      margin-top: auto;
+      text-align: center;
+    }
+
+    footer p {
+      font-family: 'Poppins', sans-serif;
+      color: var(--salmon);
+      font-size: clamp(11px, 1.4vw, 16px);
+      line-height: 1.9;
+    }
+
+    footer .footer-title {
+      font-size: clamp(13px, 1.6vw, 18px);
+      font-weight: 500;
+    }
+
+    /* ── PAGE TRANSITION ── */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .page.active { animation: fadeIn 0.3s ease; }
+
+    /* ── MOBILE HAMBURGER ── */
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 8px;
+      background: transparent;
+      border: none;
+    }
+
+    .hamburger span {
+      display: block;
+      width: 24px;
+      height: 2px;
+      background: var(--green);
+      border-radius: 2px;
+      transition: all 0.3s;
+    }
+
+    .hamburger.open span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: clamp(4px, 2vw, 24px);
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    /* ======================
+   LEGENDA
+====================== */
+
+.legend{
+
+    background:#f0edda;
+
+    border:2px solid #c97b72;
+
+    border-radius:15px;
+
+    padding:15px;
+
+    width:250px;
+
+    color:#4a6741;
+
+    font-family:'Poppins', sans-serif;
+
+    box-shadow:0 4px 12px rgba(0,0,0,0.25);
+
+}
+
+.legend h4{
+
+    margin:0 0 15px 0;
+
+    text-align:center;
+
+    font-size:28px;
+
+    color:#c97b72;
+
+    font-family:'Cormorant Garamond', serif;
+
+    font-weight:bold;
+
+}
+
+.legend p{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    margin:10px 0;
+
+    font-size:17px;
+
+    font-weight:600;
+
+}
+
+.legend img{
+
+    width:22px;
+
+    height:22px;
+
+}
+
+    @media (max-width: 500px) {
+      nav {
+        justify-content: space-between;
+        padding: 8px 16px;
+        flex-wrap: nowrap;
+      }
+
+      .hamburger { display: flex; }
+
+      .nav-links {
+        display: none;
+        width: 100%;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+        padding-top: 8px;
+      }
+
+      .nav-links.open { display: flex; }
+
+      .nav-link { width: 100%; }
+
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <div class="navbar-wrap">
+    <nav>
+      <button class="hamburger" id="hamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="nav-links" id="nav-links">
+        <a class="nav-link active" data-page="home" onclick="showPage('home')">Home</a>
+        <a class="nav-link" data-page="information" onclick="showPage('information')">Information</a>
+        <a class="nav-link" data-page="location" onclick="showPage('location')">Location</a>
+        <a class="nav-link" data-page="about" onclick="showPage('about')">About</a>
+      </div>
+    </nav>
+  </div>
+
+  <!-- ══════════════ HOME ══════════════ -->
+  <div class="page active" id="page-home">
+    <div class="hero">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Gapura_Kotagede.jpg/1280px-Gapura_Kotagede.jpg" alt="Museum Kotagede" />
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <h1 class="hero-title">MUSEUM KOTAGEDE</h1>
+        <p class="hero-subtitle">
+          Mulai pengalaman Anda dengan Virtual Tour untuk menjelajahi Kotagede secara interaktif sebelum merasakan langsung suasananya.
+        </p>
+        <a class="hero-btn" onclick="showPage('location')">360° VIRTUAL TOUR</a>
+      </div>
+    </div>
+    <section class="home-desc">
+      <p>
+        Menghadirkan kekayaan budaya Kotagede melalui perpaduan sejarah, tradisi, dan kehidupan masyarakat yang masih hidup hingga kini. Setiap sudutnya menyimpan cerita yang membentuk identitas kawasan ini sebagai living museum.
+      </p>
+    </section>
+    <footer>
+      <p class="footer-title">WEBGIS LIVING MUSEUM KOTAGEDE</p>
+      <p>Program Studi Teknik Geomatika</p>
+      <p>Universitas Pembangunan Nasional "Veteran" Yogyakarta</p>
+      <p>Tim Pengembang:<br>Gusti Bagus Rama &bull; Hilaliyyah Hafidz &bull; Azlya Prena Sanustika &bull; Octo Cahya Ramadhan &bull; Achmad David Thomas</p>
+      <p>&copy; 2026</p>
+    </footer>
+  </div>
+
+  <!-- ══════════════ INFORMATION ══════════════ -->
+  <div class="page" id="page-information">
+    <div class="hero">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Gapura_Kotagede.jpg/1280px-Gapura_Kotagede.jpg" alt="Museum Kotagede" />
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <h1 class="hero-title">INFORMATION</h1>
+      </div>
+    </div>
+
+    <section class="info-section">
+      <h2 class="section-title">SEJARAH</h2>
+      <div class="sejarah-box">
+        Pemerintah Daerah Istimewa Yogyakarta melalui Dinas Kebudayaan bersama Yayasan Pusdok mengembangkan konsep living museum di Kotagede. Untuk menghubungkan pengunjung dengan kawasan tersebut, dibuat Intro Living Museum Kotagede sebagai pusat informasi sekaligus pengantar. Fasilitas ini diharapkan menjadi titik awal bagi wisatawan untuk mengenal dan tertarik mengunjungi living museum Kotagede, dan berlokasi di Rumah Kalang sebagai salah satu warisan budaya penting milik Pemda DIY.
+      </div>
+    </section>
+
+    <section class="info-section">
+      <h2 class="section-title">VISI</h2>
+      <p class="visi-text">
+        Terwujudnya upaya perlindungan, pelestarian, dan pemanfaatan berbagai bentuk aset budaya dalam suatu model pengembangan living museum
+      </p>
+    </section>
+
+    <section>
+      <h2 class="section-title">MISI</h2>
+      <div class="misi-grid">
+        <div class="misi-card">
+          <!-- icon: people -->
+          <svg class="misi-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="22" cy="20" r="9" stroke="#4a6741" stroke-width="3.5" fill="none"/>
+            <circle cx="42" cy="20" r="9" stroke="#4a6741" stroke-width="3.5" fill="none"/>
+            <path d="M4 52c0-10 8-17 18-17s18 7 18 17" stroke="#4a6741" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+            <path d="M40 35c8 0 14 6 14 15" stroke="#4a6741" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+          </svg>
+          Mendorong pemahaman dan partisipasi masyarakat dalam mendukung museum.
+        </div>
+        <div class="misi-card">
+          <!-- icon: education -->
+          <svg class="misi-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M32 10L6 24l26 14 26-14-26-14z" stroke="#4a6741" stroke-width="3.5" stroke-linejoin="round" fill="none"/>
+            <path d="M16 31v14c0 5 7 9 16 9s16-4 16-9V31" stroke="#4a6741" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+            <line x1="56" y1="24" x2="56" y2="40" stroke="#4a6741" stroke-width="3.5" stroke-linecap="round"/>
+          </svg>
+          Meningkatkan kesadaran akan pentingnya living museum berbasis pengetahuan lokal.
+        </div>
+        <div class="misi-card">
+          <!-- icon: handshake -->
+          <svg class="misi-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4 36l12-12h10l8-8h8l12 12" stroke="#4a6741" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <path d="M22 24l8 8-8 8-10-8" stroke="#4a6741" stroke-width="3.5" stroke-linejoin="round" fill="none"/>
+            <path d="M30 32l10 10" stroke="#4a6741" stroke-width="3.5" stroke-linecap="round"/>
+            <path d="M42 28l8 8-14 12" stroke="#4a6741" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+          Mengembangkan potensi masyarakat agar menjadi pelaku sekaligus penerima manfaat, baik secara budaya maupun ekonomi.
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <p class="footer-title">WEBGIS LIVING MUSEUM KOTAGEDE</p>
+      <p>Program Studi Teknik Geomatika</p>
+      <p>Universitas Pembangunan Nasional "Veteran" Yogyakarta</p>
+      <p>Tim Pengembang:<br>Gusti Bagus Rama &bull; Hilaliyyah Hafidz &bull; Azlya Prena Sanustika &bull; Octo Cahya Ramadhan &bull; Achmad David Thomas</p>
+      <p>&copy; 2026</p>
+    </footer>
+  </div>
+
+  <!-- ══════════════ LOCATION ══════════════ -->
+  <div class="page" id="page-location">
+    <div class="hero">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Gapura_Kotagede.jpg/1280px-Gapura_Kotagede.jpg" alt="Museum Kotagede" />
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <h1 class="hero-title">LOCATION</h1>
+      </div>
+    </div>
+
+    <h2 class="section-title">DENAH</h2>
+    <div class="location-img-wrap">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Kotagede_heritage_buildings.jpg/1280px-Kotagede_heritage_buildings.jpg" alt="Denah Museum Kotagede" />
+    </div>
+
+    <h2 class="section-title">PETA</h2>
+    <div id="map"></div>
+
+    <footer>
+      <p class="footer-title">WEBGIS LIVING MUSEUM KOTAGEDE</p>
+      <p>Program Studi Teknik Geomatika</p>
+      <p>Universitas Pembangunan Nasional "Veteran" Yogyakarta</p>
+      <p>Tim Pengembang:<br>Gusti Bagus Rama &bull; Hilaliyyah Hafidz &bull; Azlya Prena Sanustika &bull; Octo Cahya Ramadhan &bull; Achmad David Thomas</p>
+      <p>&copy; 2026</p>
+    </footer>
+  </div>
+
+  <!-- ══════════════ ABOUT ══════════════ -->
+  <div class="page" id="page-about">
+    <div class="hero">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Gapura_Kotagede.jpg/1280px-Gapura_Kotagede.jpg" alt="Museum Kotagede" />
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <h1 class="hero-title">ABOUT</h1>
+      </div>
+    </div>
+
+    <h2 class="section-title">MEET OUR TEAM</h2>
+    <div class="team-grid">
+      <div class="team-card">
+        <img src="https://placehold.co/300x400/1a4a4a/f0edda?text=GBR" alt="Gusti Bagus Rama" />
+        <div class="team-card-body">
+          <div class="team-name">Gusti Bagus Rama</div>
+          <div class="team-nim">117230009</div>
+          <div class="team-role">360° Virtual Tour Specialist</div>
+        </div>
+      </div>
+      <div class="team-card">
+        <img src="https://placehold.co/300x400/1a4a4a/f0edda?text=HH" alt="Hilaliyyah Hafidz" />
+        <div class="team-card-body">
+          <div class="team-name">Hilaliyyah Hafidz</div>
+          <div class="team-nim">117230023</div>
+          <div class="team-role">UI Designer</div>
+        </div>
+      </div>
+      <div class="team-card">
+        <img src="https://placehold.co/300x400/1a4a4a/f0edda?text=APS" alt="Azlya Prena" />
+        <div class="team-card-body">
+          <div class="team-name">Azlya Prena</div>
+          <div class="team-nim">117230057</div>
+          <div class="team-role">Spatial Data Analyst</div>
+        </div>
+      </div>
+      <div class="team-card">
+        <img src="https://placehold.co/300x400/1a4a4a/f0edda?text=OCR" alt="Octo Cahya" />
+        <div class="team-card-body">
+          <div class="team-name">Octo Cahya</div>
+          <div class="team-nim">117230058</div>
+          <div class="team-role">WebGIS Developer</div>
+        </div>
+      </div>
+      <div class="team-card">
+        <img src="https://placehold.co/300x400/1a4a4a/f0edda?text=ADT" alt="Ahmad David" />
+        <div class="team-card-body">
+          <div class="team-name">Ahmad David</div>
+          <div class="team-nim">117230086</div>
+          <div class="team-role">GIS Analyst</div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <p class="footer-title">WEBGIS LIVING MUSEUM KOTAGEDE</p>
+      <p>Program Studi Teknik Geomatika</p>
+      <p>Universitas Pembangunan Nasional "Veteran" Yogyakarta</p>
+      <p>Tim Pengembang:<br>Gusti Bagus Rama &bull; Hilaliyyah Hafidz &bull; Azlya Prena Sanustika &bull; Octo Cahya Ramadhan &bull; Achmad David Thomas</p>
+      <p>&copy; 2026</p>
+    </footer>
+  </div>
+
+  <script>
+    // ── PAGE NAVIGATION ──
+    function showPage(name) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+      document.getElementById('page-' + name).classList.add('active');
+      document.querySelector('[data-page="' + name + '"]').classList.add('active');
+
+      // close mobile menu
+      document.getElementById('nav-links').classList.remove('open');
+      document.getElementById('hamburger').classList.remove('open');
+
+      // scroll to top
+      window.scrollTo(0, 0);
+
+      // init map when location page opened
+      if (name === 'location' && !window._mapInit) {
+        initMap();
+        window._mapInit = true;
+      }
+    }
+
+    // ── HAMBURGER ──
+    document.getElementById('hamburger').addEventListener('click', function () {
+      this.classList.toggle('open');
+      document.getElementById('nav-links').classList.toggle('open');
+    });
+
+    // ── LEAFLET MAP ──
+    function initMap() {
+    var map = L.map('map').setView(
+        [-7.826349,110.392154],
+        16
+    );
+
+    L.tileLayer(
+        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+        {
+            attribution:'© OpenStreetMap'
+        }
+    ).addTo(map);
+
+    // ======================
+    // ICON
+    // ======================
+
+    var museumIcon = L.icon({
+        iconUrl:'img/museum.png',
+        iconSize:[45,45]
+    });
+
+    var hotelIcon = L.icon({
+        iconUrl:'img/hotel.png',
+        iconSize:[25,25]
+    });
+
+    var restoranIcon = L.icon({
+        iconUrl:'img/restoran.png',
+        iconSize:[25,25]
+    });
+
+    var ibadahIcon = L.icon({
+        iconUrl:'img/tempatibadah.png',
+        iconSize:[25,25]
+    });
+
+    var kesehatanIcon = L.icon({
+        iconUrl:'img/fasilitaskesehatan.png',
+        iconSize:[25,25]
+    });
+
+    // ======================
+    // LAYER GROUP
+    // ======================
+
+    var museumLayer = L.layerGroup();
+    var hotelLayer = L.layerGroup();
+    var restoranLayer = L.layerGroup();
+    var ibadahLayer = L.layerGroup();
+    var kesehatanLayer = L.layerGroup();
+
+    // ======================
+    // MUSEUM
+    // ======================
+
+    fetch("Data/museum.geojson")
+    .then(response => response.json())
+    .then(data => {
+
+        L.geoJSON(data,{
+
+            pointToLayer:function(feature,latlng){
+
+                return L.marker(latlng,{
+                    icon:museumIcon
+                });
+
+            },
+
+            onEachFeature:function(feature,layer){
+
+                layer.bindPopup(
+                    `
+                    <h3>${feature.properties.nama}</h3>
+
+                    <b>Kategori :</b>
+                    ${feature.properties.kategori}<br><br>
+
+                    <b>Deskripsi :</b><br>
+                    ${feature.properties.deskripsi}<br><br>
+
+                    <b>Alamat :</b><br>
+                    ${feature.properties.alamat}<br><br>
+
+                    <b>Jam Buka :</b><br>
+                    ${feature.properties.jam_buka}
+                    `
+                );
+
+            }
+
+        }).addTo(museumLayer);
+
+        museumLayer.addTo(map);
+
+    });
+
+    // ======================
+    // HOTEL
+    // ======================
+
+    fetch("Data/hotel.geojson")
+    .then(response => response.json())
+    .then(data => {
+
+        L.geoJSON(data,{
+
+            pointToLayer:function(feature,latlng){
+
+                return L.marker(latlng,{
+                    icon:hotelIcon
+                });
+
+            },
+
+            onEachFeature:function(feature,layer){
+
+                  layer.bindPopup(
+
+"<h3>"+ (feature.properties.nama_lokas || "Nama Tidak Tersedia") +"</h3>"+
+
+"<b>Alamat :</b><br>"+
+
+(feature.properties.alamat || "-")
+
+);
+            }
+
+        }).addTo(hotelLayer);
+
+        hotelLayer.addTo(map);
+
+    });
+
+    // ======================
+    // RESTORAN
+    // ======================
+
+    fetch("Data/restoran.geojson")
+    .then(response => response.json())
+    .then(data => {
+
+        L.geoJSON(data,{
+
+            pointToLayer:function(feature,latlng){
+
+                return L.marker(latlng,{
+                    icon:restoranIcon
+                });
+
+            },
+
+            onEachFeature:function(feature,layer){
+
+                layer.bindPopup(
+
+"<h3>"+ (feature.properties.nama_resto || "Nama Tidak Tersedia") +"</h3>"+
+
+"<b>Alamat :</b><br>"+
+
+(feature.properties.alamat || "-")
+
+);
+
+            }
+
+        }).addTo(restoranLayer);
+
+        restoranLayer.addTo(map);
+
+    });
+
+    // ======================
+    // TEMPAT IBADAH
+    // ======================
+
+    fetch("Data/tempat_ibadah.geojson")
+    .then(response => response.json())
+    .then(data => {
+
+        L.geoJSON(data,{
+
+            pointToLayer:function(feature,latlng){
+
+                return L.marker(latlng,{
+                    icon:ibadahIcon
+                });
+
+            },
+
+            onEachFeature:function(feature,layer){
+
+                layer.bindPopup(
+
+"<h3>"+ (feature.properties.nama_tempa || "Nama Tidak Tersedia") +"</h3>"+
+
+"<b>Alamat :</b><br>"+
+
+(feature.properties.alamat || "-")
+
+);
+
+            }
+
+        }).addTo(ibadahLayer);
+
+        ibadahLayer.addTo(map);
+
+    });
+
+    // ======================
+    // FASKES
+    // ======================
+
+    fetch("Data/fasilitas_kesehatan.geojson")
+    .then(response => response.json())
+    .then(data => {
+
+        L.geoJSON(data,{
+
+            pointToLayer:function(feature,latlng){
+
+                return L.marker(latlng,{
+                    icon:kesehatanIcon
+                });
+
+            },
+
+            onEachFeature:function(feature,layer){
+
+                layer.bindPopup(
+
+"<h3>"+ (feature.properties.nama_faske || "Nama Tidak Tersedia") +"</h3>"+
+
+"<b>Alamat :</b><br>"+
+
+(feature.properties.alamat || "-")
+
+);
+
+            }
+
+        }).addTo(kesehatanLayer);
+
+        kesehatanLayer.addTo(map);
+
+    });
+
+    // ======================
+    // LAYER CONTROL
+    // ======================
+
+    var overlayMaps = {
+
+        "Museum": museumLayer,
+        "Hotel": hotelLayer,
+        "Restoran": restoranLayer,
+        "Tempat Ibadah": ibadahLayer,
+        "Fasilitas Kesehatan": kesehatanLayer
+
+    };
+
+    L.control.layers(
+        null,
+        overlayMaps
+    ).addTo(map);
+
+    // SCALE BAR
+
+    L.control.scale().addTo(map);
+    // ======================
+// LEGENDA
+// ======================
+
+var legend = L.control({
+    position: 'bottomright'
+});
+
+legend.onAdd = function () {
+
+    var div = L.DomUtil.create(
+        'div',
+        'legend'
+    );
+
+    div.innerHTML =
+
+    '<h4>Legenda</h4>' +
+
+    '<p><img src="img/museum.png" width="20"> Museum</p>' +
+
+    '<p><img src="img/hotel.png" width="20"> Hotel</p>' +
+
+    '<p><img src="img/restoran.png" width="20"> Restoran</p>' +
+
+    '<p><img src="img/tempatibadah.png" width="20"> Tempat Ibadah</p>' +
+
+    '<p><img src="img/fasilitaskesehatan.png" width="20"> Fasilitas Kesehatan</p>';
+
+    return div;
+};
+
+legend.addTo(map);
+
+}
+  </script>
+</body>
+</html>
